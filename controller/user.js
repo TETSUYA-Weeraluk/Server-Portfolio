@@ -18,10 +18,10 @@ const checkUser = (req, res) => {
   }
 };
 
-const getUser = (req, res) => {
+const getAllUser = (req, res) => {
   try {
-    const q = "SELECT * FROM users JOIN role ON users.id_role = role.id_role"
-    connection.execute(q, (err, data) => {      
+    const q = "SELECT * FROM users JOIN role ON users.id_role = role.id_role";
+    connection.execute(q, (err, data) => {
       const resData = data.map((dataUser) => ({
         id: dataUser.id_users,
         username: dataUser.username,
@@ -29,7 +29,7 @@ const getUser = (req, res) => {
         lname: dataUser.lname,
         email: dataUser.email,
         id_role: dataUser.id_role,
-        name_role : dataUser.name_role,
+        name_role: dataUser.name_role,
       }));
       res.send(resData);
     });
@@ -38,7 +38,89 @@ const getUser = (req, res) => {
   }
 };
 
+const getAllRole = (req, res) => {
+  try {
+    const q = "SELECT * FROM role";
+    connection.execute(q, (err, data) => {
+      if (err) {
+        res.send({ error: err });
+      }
+      res.send(data);
+    });
+  } catch (error) {
+    res.send({ error: error });
+  }
+};
+
+const getUser = (req, res) => {
+  console.log('getUser')
+  const q = 
+    "SELECT * FROM users JOIN role ON users.id_role = role.id_role WHERE username = ?";
+  try {
+    connection.execute(q, [req.body.username], (err, data) => {
+      if (data.length <= 0) {
+        res.send({ error: "user not found" });
+      } else if (err) {
+        res.send({ error: err });
+      } else {
+        const resData = {
+          id: data[0].id_users,
+          username: data[0].username,
+          fname: data[0].fname,
+          lname: data[0].lname,
+          email: data[0].email,
+          id_role: data[0].id_role,
+          name_role: data[0].name_role,
+        };
+        res.send(resData);
+      }
+    });
+  } catch (error) {
+    res.send({ error: error });
+  }
+};
+
+const updateUer = (req, res) => {
+  const title = req.body.title;
+  const currentValue = req.body.value;
+  const editValue = req.body.valueEdit;
+  const q = `UPDATE users SET ${title} = '${editValue}' WHERE ${title} = '${currentValue}'`;
+  try {
+    connection.execute(q, (err, data) => {
+      if (err) {
+        res.send({ error: err });
+      } else if (data.changedRows === 0) {
+        res.send({ message: "data not change" });
+      } else {
+        const q =
+        `SELECT * FROM users JOIN role ON users.id_role = role.id_role WHERE ${title} = ?`;
+        try {
+          connection.execute(q, [editValue], (err, data) => {
+            const resData = {
+              id: data[0].id_users,
+              username: data[0].username,
+              fname: data[0].fname,
+              lname: data[0].lname,
+              email: data[0].email,
+              id_role: data[0].id_role,
+              name_role: data[0].name_role,
+            };
+            res.send(resData);  
+          });
+        } catch (error) {
+          res.send({ error: error });
+        }
+      }
+    });
+  } catch (error) {
+    res.send({ error: error });
+  }
+};
+
 module.exports = {
   checkUser,
+  getAllUser,
   getUser,
+  getAllRole,
+  updateUer,
 };
