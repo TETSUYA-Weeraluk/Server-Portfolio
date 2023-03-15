@@ -1,6 +1,7 @@
 const express = require("express");
 const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user");
+const dataManageRouter = require('./routes/dataManagement')
 const app = express();
 const cors = require("cors");
 const port = 7777;
@@ -14,6 +15,7 @@ const corsOptions = {
 
 app.use("/api/users", authRouter);
 app.use("/api/users", userRouter);
+app.use("/api/dashboard", dataManageRouter);
 
 app.listen(port, () => {
   console.log(`Server app listening on port ${port}`);
