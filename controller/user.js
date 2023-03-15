@@ -5,10 +5,14 @@ const { connection } = require("../db");
 const checkUser = (req, res) => {
   try {
     var decoded = jwt.verify(req.body.token, secret);
-    const q = "SELECT * FROM users WHERE id_users = ?";
+    const q =
+      "SELECT * FROM users JOIN role ON users.id_role = role.id_role WHERE id_users = ?";
     connection.execute(q, [decoded.id], (err, data) => {
-      if (data.length >= 0) {
-        res.send({ token: req.body.token });
+      if (data.length > 0) {
+        res.send({
+          token: req.body.token,
+          role: data[0].id_role,
+        });
       } else {
         res.send({ message: "error" });
       }
@@ -53,8 +57,7 @@ const getAllRole = (req, res) => {
 };
 
 const getUser = (req, res) => {
-  console.log('getUser')
-  const q = 
+  const q =
     "SELECT * FROM users JOIN role ON users.id_role = role.id_role WHERE username = ?";
   try {
     connection.execute(q, [req.body.username], (err, data) => {
@@ -92,8 +95,7 @@ const updateUer = (req, res) => {
       } else if (data.changedRows === 0) {
         res.send({ message: "data not change" });
       } else {
-        const q =
-        `SELECT * FROM users JOIN role ON users.id_role = role.id_role WHERE ${title} = ?`;
+        const q = `SELECT * FROM users JOIN role ON users.id_role = role.id_role WHERE ${title} = ?`;
         try {
           connection.execute(q, [editValue], (err, data) => {
             const resData = {
@@ -105,7 +107,7 @@ const updateUer = (req, res) => {
               id_role: data[0].id_role,
               name_role: data[0].name_role,
             };
-            res.send(resData);  
+            res.send(resData);
           });
         } catch (error) {
           res.send({ error: error });
@@ -117,10 +119,49 @@ const updateUer = (req, res) => {
   }
 };
 
+const deleteUser = (req, res) => {
+  if (req.body.id === "") {
+    console.log("ค่าว่าง");
+    return;
+  } else {
+    const id = req.body.id;
+    const q = "DELETE FROM users WHERE id_users = (?)";
+    try {
+      connection.execute(q, [id], (err, data) => {
+        if (err) {
+          res.send({ error: err });
+        } else {
+          try {
+            const q =
+              "SELECT * FROM users JOIN role ON users.id_role = role.id_role";
+            connection.execute(q, (err, data) => {
+              const resData = data.map((dataUser) => ({
+                id: dataUser.id_users,
+                username: dataUser.username,
+                fname: dataUser.fname,
+                lname: dataUser.lname,
+                email: dataUser.email,
+                id_role: dataUser.id_role,
+                name_role: dataUser.name_role,
+              }));
+              res.send(resData);
+            });
+          } catch (error) {
+            res.send({ error: error });
+          }
+        }
+      });
+    } catch (error) {
+      res.send({ error: error });
+    }
+  }
+};
+
 module.exports = {
   checkUser,
   getAllUser,
   getUser,
   getAllRole,
   updateUer,
+  deleteUser,
 };
