@@ -2,105 +2,44 @@ const { connection } = require("../db");
 
 const getAllDataManagement = (req, res) => {
   const q = "SELECT * FROM icons_personal";
+  const q_personal = "SELECT * FROM personal WHERE id_users = 1";
+  const q_hero = "SELECT * FROM hero WHERE id_users = 1";
+  const q_contact =
+    "SELECT * FROM contact join contact_type ON contact.id_contact_type = contact_type.id_contact_type WHERE id_users = 1";
+  const q_education = "SELECT * FROM education WHERE id_users = 1";
+  const q_skill =
+    "SELECT * FROM skill join skill_item on skill.id_skill_item = skill_item.id_skill_item";
+  const q_project = "SELECT * FROM project WHERE id_users = 1";
+
   try {
-    connection.execute(q, (err, icons, test) => {
-      const q = "SELECT * FROM personal";
-      connection.execute(q, (err, personal, test) => {
-        if (err) throw err;
-        const q = "SELECT * FROM hero WHERE id_personal = ?";
-        connection.execute(q, [personal[0].id_personal], (err, hero, test) => {
-          if (err) throw err;
-          const q = "SELECT * FROM education WHERE id_personal = ?";
-          connection.execute(
-            q,
-            [personal[0].id_personal],
-            (err, education, test) => {
-              if (err) throw err;
-              const q = "SELECT * FROM skill WHERE id_personal = ?";
-              connection.execute(
-                q,
-                [personal[0].id_personal],
-                (err, skill, test) => {
-                  if (err) throw err;
-                  const q = "SELECT * FROM project WHERE id_personal = ?";
-                  connection.execute(
-                    q,
-                    [personal[0].id_personal],
-                    (err, project, test) => {
-                      if (err) throw err;
-                      let link_email = {};
-                      let link_phone = {};
-
-                      if (personal[0].email !== "") {
-                        link_email = {
-                          value: personal[0].email,
-                          icons: icons[2].link_img,
-                          link: `mailto:${personal[0].email}`,
-                        };
-                      } else {
-                        link_email = {
-                          value: personal[0].email,
-                          icons: icons[2].link_img,
-                        };
-                      }
-
-                      if (personal[0].phone !== "") {
-                        link_phone = {
-                          value: personal[0].phone,
-                          icons: icons[3].link_img,
-                          link: `tel:${personal[0].email}`,
-                        };
-                      } else {
-                        link_phone = {
-                          value: personal[0].phone,
-                          icons: icons[3].link_img,
-                        };
-                      }
-
-                      const data = {
-                        personal: {
-                          id: personal[0].id_personal,
-                          name: {
-                            value: personal[0].name,
-                            icons: icons[0].link_img,
-                          },
-                          date_of_birth: {
-                            value: personal[0].date_of_birth,
-                            icons: icons[1].link_img,
-                          },
-                          email: link_email,
-                          phone: link_phone,
-                          facebook: {
-                            value: personal[0].facebook,
-                            icons: icons[4].link_img,
-                            link: personal[0].link_facebook,
-                            column_link: "link_facebook",
-                          },
-                          line: {
-                            value: personal[0].line,
-                            icons: icons[5].link_img,
-                            link: personal[0].link_line,
-                            column_link: "link_line",
-                          },
-                          github: {
-                            value: personal[0].github,
-                            icons: icons[6].link_img,
-                            link: personal[0].link_github,
-                            column_link: "link_github",
-                          },
-                        },
-                        hero: hero,
-                        education: education,
-                        skill: skill,
-                        project: project,
-                      };
-                      res.send(data);
-                    }
-                  );
-                }
-              );
-            }
-          );
+    //Icons Personal
+    connection.execute(q, (err, icons_personal, field) => {
+      //Personal Info
+      connection.execute(q_personal, (err, personal, field) => {
+        // Data Hero
+        connection.execute(q_hero, (err, hero, field) => {
+          // Data personal_contact
+          connection.execute(q_contact, (err, contact, field) => {
+            // Data personal_education
+            connection.execute(q_education, (err, education, field) => {
+              // Data personal_skill
+              connection.execute(q_skill, (err, skill, field) => {
+                // Data personal_project
+                connection.execute(q_project, (err, project, field) => {
+                  const data = {
+                    icons_personal: icons_personal,
+                    personal: personal[0],
+                    contact: contact,
+                    education: education,
+                    skill: skill,
+                    hero: hero,
+                    project: project,
+                  };
+                  res.send(data);
+                });
+              });
+            });
+          });
         });
       });
     });
@@ -115,118 +54,61 @@ const updateDataManagement = (req, res) => {
   const value = req.body.value;
   const id_table = req.body.id_table;
   const id = req.body.id;
+
   const q = `UPDATE ${table} SET ${title} = "${value}" WHERE ${id_table} = ${id}`;
+  // Update Data
   connection.execute(q, (err, data) => {
     if (err) return res.json(err);
     if (data.changedRows === 0) {
       res.send({ message: "data not change" });
-    } else {
+    }
+    // SELECT DATA
+    else {
       const q = "SELECT * FROM icons_personal";
-      connection.execute(q, (err, icons, test) => {
-        const q = "SELECT * FROM personal";
-        connection.execute(q, (err, personal, test) => {
-          if (err) throw err;
-          const q = "SELECT * FROM hero WHERE id_personal = ?";
-          connection.execute(
-            q,
-            [personal[0].id_personal],
-            (err, hero, test) => {
-              if (err) throw err;
-              const q = "SELECT * FROM education WHERE id_personal = ?";
-              connection.execute(
-                q,
-                [personal[0].id_personal],
-                (err, education, test) => {
-                  if (err) throw err;
-                  const q = "SELECT * FROM skill WHERE id_personal = ?";
-                  connection.execute(
-                    q,
-                    [personal[0].id_personal],
-                    (err, skill, test) => {
-                      if (err) throw err;
-                      const q = "SELECT * FROM project WHERE id_personal = ?";
-                      connection.execute(
-                        q,
-                        [personal[0].id_personal],
-                        (err, project, test) => {
-                          if (err) throw err;
-                          let link_email = {};
-                          let link_phone = {};
+      const q_personal = "SELECT * FROM personal WHERE id_users = 1";
+      const q_hero = "SELECT * FROM hero WHERE id_users = 1";
+      const q_contact =
+        "SELECT * FROM contact join contact_type ON contact.id_contact_type = contact_type.id_contact_type WHERE id_users = 1";
+      const q_education = "SELECT * FROM education WHERE id_users = 1";
+      const q_skill =
+        "SELECT * FROM skill join skill_item on skill.id_skill_item = skill_item.id_skill_item";
+      const q_project = "SELECT * FROM project WHERE id_users = 1";
 
-                          if (personal[0].email !== "") {
-                            link_email = {
-                              value: personal[0].email,
-                              icons: icons[2].link_img,
-                              link: `mailto:${personal[0].email}`,
-                            };
-                          } else {
-                            link_email = {
-                              value: personal[0].email,
-                              icons: icons[2].link_img,
-                            };
-                          }
-
-                          if (personal[0].phone !== "") {
-                            link_phone = {
-                              value: personal[0].phone,
-                              icons: icons[3].link_img,
-                              link: `tel:${personal[0].email}`,
-                            };
-                          } else {
-                            link_phone = {
-                              value: personal[0].phone,
-                              icons: icons[3].link_img,
-                            };
-                          }
-
-                          const data = {
-                            personal: {
-                              id: personal[0].id_personal,
-                              name: {
-                                value: personal[0].name,
-                                icons: icons[0].link_img,
-                              },
-                              date_of_birth: {
-                                value: personal[0].date_of_birth,
-                                icons: icons[1].link_img,
-                              },
-                              email: link_email,
-                              phone: link_phone,
-                              facebook: {
-                                value: personal[0].facebook,
-                                icons: icons[4].link_img,
-                                link: personal[0].link_facebook,
-                                column_link: "link_facebook",
-                              },
-                              line: {
-                                value: personal[0].line,
-                                icons: icons[5].link_img,
-                                link: personal[0].link_line,
-                                column_link: "link_line",
-                              },
-                              github: {
-                                value: personal[0].github,
-                                icons: icons[6].link_img,
-                                link: personal[0].link_github,
-                                column_link: "link_github",
-                              },
-                            },
-                            hero: hero,
-                            education: education,
-                            skill: skill,
-                            project: project,
-                          };
-                          res.send(data);
-                        }
-                      );
-                    }
-                  );
-                }
-              );
-            }
-          );
+      try {
+        //Icons Personal
+        connection.execute(q, (err, icons_personal, field) => {
+          //Personal Info
+          connection.execute(q_personal, (err, personal, field) => {
+            // Data Hero
+            connection.execute(q_hero, (err, hero, field) => {
+              // Data personal_contact
+              connection.execute(q_contact, (err, contact, field) => {
+                // Data personal_education
+                connection.execute(q_education, (err, education, field) => {
+                  // Data personal_skill
+                  connection.execute(q_skill, (err, skill, field) => {
+                    // Data personal_project
+                    connection.execute(q_project, (err, project, field) => {
+                      const data = {
+                        icons_personal: icons_personal,
+                        personal: personal[0],
+                        contact: contact,
+                        education: education,
+                        skill: skill,
+                        hero: hero,
+                        project: project,
+                      };
+                      res.send(data);
+                    });
+                  });
+                });
+              });
+            });
+          });
         });
-      });
+      } catch (error) {
+        res.send({ error: error });
+      }
     }
   });
 };
